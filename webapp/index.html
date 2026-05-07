@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Bot Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .card-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .main-button {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: auto;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-details h3 {
+            font-size: 16px;
+        }
+
+        .user-details p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Social Bot AI</h1>
+        <p>Media yuklash va AI yordamchi</p>
+    </div>
+
+    <div class="user-info">
+        <div class="user-avatar" id="user-initials">U</div>
+        <div class="user-details">
+            <h3 id="user-name">Foydalanuvchi</h3>
+            <p id="user-status">Online</p>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="card">
+            <div class="card-icon">📥</div>
+            <div class="card-title">Yuklamalar</div>
+            <div class="card-value">12 ta</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">🤖</div>
+            <div class="card-title">AI Savollar</div>
+            <div class="card-value">45 ta</div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 10px;">
+        <div class="card-title">Media Yuklash</div>
+        <input type="text" id="media-link" placeholder="YouTube, Instagram yoki TikTok havolasi..." 
+               style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; margin-top: 10px; margin-bottom: 10px;">
+        <button class="main-button" onclick="sendLink()" style="width: 100%; margin-top: 0;">🚀 Yuklab olish</button>
+    </div>
+
+    <div class="card" style="margin-top: 10px;">
+        <div class="card-title">Bot haqida</div>
+        <p style="font-size: 14px; line-height: 1.5; color: var(--text-secondary);">
+            Instagram, TikTok va YouTube-dan videolarni oson yuklang. Gemini AI orqali har qanday savolga javob oling.
+        </p>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Foydalanuvchi ma'lumotlarini olish
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
+            document.getElementById('user-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+            document.getElementById('user-initials').innerText = user.first_name.charAt(0);
+        }
+
+        function sendLink() {
+            const link = document.getElementById('media-link').value;
+            if (link.trim() === "") {
+                alert("Iltimos, havolani kiriting!");
+                return;
+            }
+            // Linkni botga yuborish
+            tg.sendData(link);
+            tg.close();
+        }
+
+        function closeApp() {
+            tg.close();
+        }
+
+        // Telegram interfeysi ranglariga moslashish
+        document.body.style.setProperty('--bg-color', tg.backgroundColor || '#0f172a');
+    </script>
+</body>
+</html>
