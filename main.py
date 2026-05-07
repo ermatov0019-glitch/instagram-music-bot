@@ -91,7 +91,7 @@ async def admin_command(message: types.Message):
     ]
     reply_markup = InlineKeyboardMarkup(inline_keyboard=kb)
     
-    await message.answer(f"🔧 **Admin Panel**\n\nFoydalanuvchilar soni: {count}", reply_markup=reply_markup, parse_mode="Markdown")
+    await message.answer(f"🔧 **Boshqaruv Paneli**\n\n📊 Foydalanuvchilar: `{count}` ta\n📅 Status: `Faol`", reply_markup=reply_markup, parse_mode="Markdown")
 
 @dp.callback_query(F.data == "admin_stats")
 async def cb_admin_stats(callback: types.CallbackQuery):
@@ -195,10 +195,10 @@ async def handle_link(message: types.Message):
     unique_id = str(uuid.uuid4())[:8]
     url_cache[unique_id] = url
     
-    # Main Choice Buttons
+    # Premium Main Choice Buttons
     inline_kb = InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="🎬 Video yuklash", callback_data=f"download_video:{unique_id}"),
+            InlineKeyboardButton(text="🎬 Videoni yuklab olish", callback_data=f"download_video:{unique_id}"),
         ],
         [
             InlineKeyboardButton(text="🎵 To'liq musiqa", callback_data=f"full_music:{unique_id}"),
@@ -206,7 +206,11 @@ async def handle_link(message: types.Message):
         ]
     ])
     
-    await message.answer("Nima yuklamoqchisiz? 👇", reply_markup=inline_kb)
+    await message.answer(
+        f"📥 **Media topildi!**\n\nNima yuklamoqchisiz? Tanlang: 👇", 
+        reply_markup=inline_kb, 
+        parse_mode="Markdown"
+    )
 
 @dp.callback_query(F.data.startswith("download_video:"))
 async def cb_download_video(callback: types.CallbackQuery):
@@ -216,20 +220,20 @@ async def cb_download_video(callback: types.CallbackQuery):
         await callback.answer("Xatolik: Havola eskirgan. ❌", show_alert=True)
         return
 
-    status = await callback.message.answer("Video tayyorlanmoqda... ⏳")
+    status = await callback.message.answer("🎬 **Video tayyorlanmoqda...** ⏳")
     video_files = await asyncio.to_thread(download_media, url, audio_only=False)
     
     if video_files == "COOKIE_REQUIRED":
-        await status.edit_text("Xatolik: Cookies talab qilinadi. 🔒")
+        await status.edit_text("❌ **Xatolik:** Cookies talab qilinadi. 🔒")
         return
     
     if video_files and isinstance(video_files, list):
         for path in video_files:
-            await callback.message.answer_video(FSInputFile(path), caption="Tayyor! ✅")
+            await callback.message.answer_video(FSInputFile(path), caption="✅ **Video tayyor!**")
         cleanup_files(video_files)
         await status.delete()
     else:
-        await status.edit_text("Videoni yuklab bo'lmadi. 😔")
+        await status.edit_text("😔 **Videoni yuklab bo'lmadi.**")
     await callback.answer()
 
 @dp.callback_query(F.data.startswith("full_music:"))
@@ -240,7 +244,7 @@ async def cb_full_music(callback: types.CallbackQuery):
         await callback.answer("Xatolik: Havola eskirgan. ❌", show_alert=True)
         return
 
-    status = await callback.message.answer("Musiqa aniqlanmoqda... 🔍")
+    status = await callback.message.answer("🔍 **Musiqa aniqlanmoqda...**")
     
     audio_files = await asyncio.to_thread(download_media, url, audio_only=True)
     if not audio_files or not isinstance(audio_files, list):
@@ -252,12 +256,13 @@ async def cb_full_music(callback: types.CallbackQuery):
 
     if shazam_res['success']:
         query = f"{shazam_res['artist']} {shazam_res['title']}"
-        caption = f"💿 **Qo'shiq nomi:** {shazam_res['title']}\n" \
-                  f"👤 **Ijrochi:** {shazam_res['artist']}\n" \
+        caption = f"✅ **Musiqa topildi!**\n\n" \
+                  f"💿 **Nomi:** `{shazam_res['title']}`\n" \
+                  f"👤 **Ijrochi:** `{shazam_res['artist']}`\n" \
                   f"💽 **Albom:** {shazam_res['album']}\n" \
                   f"🎭 **Janr:** {shazam_res['genre']}\n" \
-                  f"📅 **Yil:** {shazam_res['released']}\n\n" \
-                  f"To'liq versiya yuklanmoqda... ⏳"
+                  f"📅 **Yili:** {shazam_res['released']}\n\n" \
+                  f"📥 **To'liq versiya yuklanmoqda...** ⏳"
         
         kb = []
         if shazam_res.get('lyrics'):
@@ -299,16 +304,16 @@ async def cb_extract_audio(callback: types.CallbackQuery):
         await callback.answer("Xatolik: Havola eskirgan. ❌", show_alert=True)
         return
 
-    status = await callback.message.answer("Musiqa ajratib olinmoqda... ⏳")
+    status = await callback.message.answer("✂️ **Musiqa ajratib olinmoqda...** ⏳")
     audio_files = await asyncio.to_thread(download_media, url, audio_only=True)
     
     if audio_files and isinstance(audio_files, list):
         for path in audio_files:
-            await callback.message.answer_audio(FSInputFile(path), caption="Videodagi musiqasi ✂️")
+            await callback.message.answer_audio(FSInputFile(path), caption="✂️ **Videodagi musiqa tayyor!**")
         cleanup_files(audio_files)
         await status.delete()
     else:
-        await status.edit_text("Musiqani ajratib bo'lmadi. 😔")
+        await status.edit_text("😔 **Musiqani ajratib bo'lmadi.**")
     await callback.answer()
 
 @dp.callback_query(F.data == "manual_search_prompt")
