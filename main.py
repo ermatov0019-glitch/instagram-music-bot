@@ -20,13 +20,16 @@ from dotenv import load_dotenv
 from downloader import download_media, cleanup_files, search_and_download_music
 from ai_handler import get_ai_response
 from music_handler import identify_music
+import database as db
 
-# Temporary storage for URLs
+# Temporary storage for URLs and broadcast state
 url_cache = {}
+admin_state = {}
 
 # Load environment variables
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = os.getenv("ADMIN_ID") # Add your Telegram ID here
 # Mini App havolasi    # YouTube Mobil havolasi
 WEBAPP_URL = "https://m.youtube.com/" 
 
@@ -39,6 +42,12 @@ dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def start_command(message: types.Message):
+    """
+    Handle the /start command.
+    """
+    # Register user
+    db.add_user(message.from_user.id, message.from_user.username, message.from_user.full_name)
+    
     # 1. Bot menyusidagi tugmani sozlash
     try:
         await bot.set_chat_menu_button(
@@ -55,6 +64,63 @@ async def start_command(message: types.Message):
         ],
         resize_keyboard=True
     )
+
+    welcome_text = (
+        f"Salom, {message.from_user.full_name}! 👋\n\n"
+        "Men Instagram, TikTok va YouTube-dan media yuklovchi botman.\n"
+        "Link yuboring va men sizga video yoki musiqasini topib beraman. 🎬🎵\n\n"
+        "Bundan tashqari, men bilan shunchaki suhbatlashishingiz ham mumkin! 🧠"
+    )
+    if str(message.from_user.id) == str(ADMIN_ID):
+        welcome_text += "\n\nSiz adminsiz! /admin buyrug'ini ishlatishingiz mumkin."
+    
+    await message.answer(welcome_text, reply_markup=reply_markup)
+
+@dp.message(Command("admin"))
+async def admin_command(message: types.Message):
+    """
+    Admin panel menu.
+    """
+    if str(message.from_user.id) != str(ADMIN_ID):
+        return
+
+    count = db.get_user_count()
+    kb = [
+        [InlineKeyboardButton(text="📊 Statistika", callback_data="admin_stats")],
+        [InlineKeyboardButton(text="📢 Xabar yuborish", callback_data="admin_broadcast")]
+    ]
+    reply_markup = InlineKeyboardMarkup(inline_keyboard=kb)
+    
+    await message.answer(f"🔧 **Admin Panel**\n\nFoydalanuvchilar soni: {count}", reply_markup=reply_markup, parse_mode="Markdown")
+
+@dp.callback_query(F.data == "admin_stats")
+async def cb_admin_stats(callback: types.CallbackQuery):
+    count = db.get_user_count()
+    await callback.answer(f"Botdan {count} ta foydalanuvchi ro'yxatdan o'tgan.", show_alert=True)
+
+@dp.callback_query(F.data == "admin_broadcast")
+async def cb_admin_broadcast(callback: types.CallbackQuery):
+    admin_state[callback.from_user.id] = "waiting_broadcast"
+    await callback.message.answer("Barcha foydalanuvchilarga yubormoqchi bo'lgan xabaringizni kiriting (matn, rasm yoki video):")
+    await callback.answer()
+
+@dp.message(lambda message: admin_state.get(message.from_user.id) == "waiting_broadcast")
+async def process_broadcast(message: types.Message):
+    admin_state.pop(message.from_user.id, None)
+    users = db.get_all_users()
+    
+    status = await message.answer(f"Xabar {len(users)} ta foydalanuvchi-ga yuborilmoqda... ⏳")
+    
+    count = 0
+    for user_id in users:
+        try:
+            await message.copy_to(chat_id=user_id)
+            count += 1
+            await asyncio.sleep(0.05) # Rate limit protection
+        except Exception:
+            pass
+            
+    await status.edit_text(f"Xabar {count} ta foydalanuvchiga muvaffaqiyatli yuborildi! ✅")
     
     # 3. Inline tugma
     inline_markup = InlineKeyboardMarkup(inline_keyboard=[
