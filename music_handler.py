@@ -1,11 +1,19 @@
 import asyncio
-from shazamio import Shazam
+try:
+    from shazamio import Shazam
+    SHAZAM_AVAILABLE = True
+except ImportError:
+    SHAZAM_AVAILABLE = False
+    print("Warning: shazamio library not found. Shazam features will be disabled.")
 import os
 
 async def identify_music(file_path: str):
     """
     Identifies music using Shazam API with multiple attempts at different offsets.
     """
+    if not SHAZAM_AVAILABLE:
+        return {'success': False, 'message': "Kechirasiz, ushbu serverda Shazam funksiyasi vaqtincha o'chirilgan. Qo'shiq nomini yozib qidirishingiz mumkin. 🔍"}
+    
     shazam = Shazam()
     
     # We will try recognizing the song as is first.
