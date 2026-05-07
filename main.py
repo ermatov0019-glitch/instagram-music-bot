@@ -13,7 +13,9 @@ from aiogram.types import (
     WebAppInfo, 
     ReplyKeyboardMarkup, 
     KeyboardButton,
-    MenuButtonWebApp
+    MenuButtonWebApp,
+    BotCommand,
+    BotCommandScopeChat
 )
 from dotenv import load_dotenv
 
@@ -48,7 +50,24 @@ async def start_command(message: types.Message):
     # Register user
     db.add_user(message.from_user.id, message.from_user.username, message.from_user.full_name)
     
-    # 1. Bot menyusidagi tugmani sozlash
+    # Set Commands for Admin
+    if str(message.from_user.id) == str(ADMIN_ID):
+        admin_cmds = [
+            BotCommand(command="start", description="Botni qayta tushirish"),
+            BotCommand(command="search", description="Musiqa qidirish"),
+            BotCommand(command="admin", description="Boshqaruv paneli")
+        ]
+        await bot.set_my_commands(commands=admin_cmds, scope=BotCommandScopeChat(chat_id=message.from_user.id))
+    else:
+        user_cmds = [
+            BotCommand(command="start", description="Botni qayta tushirish"),
+            BotCommand(command="search", description="Musiqa qidirish")
+        ]
+        try:
+            await bot.set_my_commands(commands=user_cmds, scope=BotCommandScopeChat(chat_id=message.from_user.id))
+        except: pass
+
+    # Mini App Button
     try:
         await bot.set_chat_menu_button(
             chat_id=message.chat.id,
