@@ -76,14 +76,25 @@ async def start_command(message: types.Message):
     except Exception as e:
         logging.error(f"Menu button error: {e}")
 
-    # 2. Klaviatura tugmasi (Reply Keyboard)
-    reply_markup = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="📱 Mini App-ni ochish", web_app=WebAppInfo(url=WEBAPP_URL))],
-            [KeyboardButton(text="👨‍💻 Admin bilan bog'lanish")]
-        ],
-        resize_keyboard=True
-    )
+    # Keyboards
+    if str(message.from_user.id) == str(ADMIN_ID):
+        # Admin Keyboard
+        reply_markup = ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text="📱 Mini App-ni ochish", web_app=WebAppInfo(url=WEBAPP_URL))],
+                [KeyboardButton(text="🛠 Boshqaruv Paneli"), KeyboardButton(text="👨‍💻 Admin bilan bog'lanish")]
+            ],
+            resize_keyboard=True
+        )
+    else:
+        # User Keyboard
+        reply_markup = ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text="📱 Mini App-ni ochish", web_app=WebAppInfo(url=WEBAPP_URL))],
+                [KeyboardButton(text="👨‍💻 Admin bilan bog'lanish")]
+            ],
+            resize_keyboard=True
+        )
 
     welcome_text = (
         f"Salom, {message.from_user.full_name}! 👋\n\n"
@@ -109,6 +120,7 @@ async def contact_admin_handler(message: types.Message):
     ])
     await message.answer("Sizda biron savol yoki taklif bormi? Admin bilan bog'laning: 👇", reply_markup=kb)
 
+@dp.message(F.text == "🛠 Boshqaruv Paneli")
 @dp.message(Command("admin"))
 async def admin_command(message: types.Message):
     """
@@ -497,11 +509,33 @@ async def handle_music(message: types.Message):
             os.remove(file_path)
 
 async def main():
-    print("Bot ishga tushdi...")
+    """
+    Main entry point for the bot.
+    """
+    # Start web server for Render health check
+    from aiohttp import web
+    
+    async def handle(request):
+        return web.Response(text="Bot is running!")
+
+    app = web.Application()
+    app.router.add_get("/", handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    
+    # Render provides PORT environment variable
+    port = int(os.environ.get("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    
+    # Start bot and server concurrently
+    print(f"Starting web server on port {port}...")
+    await site.start()
+    
+    print("Starting bot polling...")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
-    except KeyboardInterrupt:
-        print("Bot to'xtatildi.")
+    except (KeyboardInterrupt, SystemExit):
+        logging.info("Bot stopped!")
