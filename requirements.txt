@@ -1,0 +1,8 @@
+aiogram
+yt-dlp
+python-dotenv
+aiohttp
+google-generativeai
+groq
+shazamio
+imageio-ffmpeg
