@@ -1,0 +1,17 @@
+.env
+*.txt
+!requirements.txt
+downloads/
+temp/
+__pycache__/
+*.pyc
+.antigravity/
+ffmpeg.exe
+ffprobe.exe
+cookies.txt
+*.mp4
+*.mp3
+*.m4a
+*.webp
+*.jpg
+*.png
