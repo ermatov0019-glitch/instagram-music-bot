@@ -79,7 +79,8 @@ async def start_command(message: types.Message):
     # 2. Klaviatura tugmasi (Reply Keyboard)
     reply_markup = ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📱 Mini App-ni ochish", web_app=WebAppInfo(url=WEBAPP_URL))]
+            [KeyboardButton(text="📱 Mini App-ni ochish", web_app=WebAppInfo(url=WEBAPP_URL))],
+            [KeyboardButton(text="👨‍💻 Admin bilan bog'lanish")]
         ],
         resize_keyboard=True
     )
@@ -94,6 +95,19 @@ async def start_command(message: types.Message):
         welcome_text += "\n\nSiz adminsiz! /admin buyrug'ini ishlatishingiz mumkin."
     
     await message.answer(welcome_text, reply_markup=reply_markup)
+    
+    # Inline button for contact
+    inline_contact = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me/ermatov004")]
+    ])
+    await message.answer("Agarda yordam kerak bo'lsa, admin bilan bog'lanishingiz mumkin:", reply_markup=inline_contact)
+
+@dp.message(F.text == "👨‍💻 Admin bilan bog'lanish")
+async def contact_admin_handler(message: types.Message):
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📩 Habar yuborish", url="https://t.me/ermatov004")]
+    ])
+    await message.answer("Sizda biron savol yoki taklif bormi? Admin bilan bog'laning: 👇", reply_markup=kb)
 
 @dp.message(Command("admin"))
 async def admin_command(message: types.Message):
