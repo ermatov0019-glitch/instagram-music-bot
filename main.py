@@ -445,15 +445,17 @@ async def cb_search_text(callback: types.CallbackQuery):
     await process_music_search(callback.message, query)
     await callback.answer()
 
-@dp.message(F.audio | F.voice | F.video_note)
+@dp.message(F.video | F.audio | F.voice | F.video_note)
 async def handle_music(message: types.Message):
     """
-    Handles audio, voice and video notes for music identification.
+    Handles video, audio, voice and video notes for music identification.
     """
     status_message = await message.answer("Musiqa tahlil qilinmoqda... 🎧")
     
     # Get the file id
-    if message.audio:
+    if message.video:
+        file_id = message.video.file_id
+    elif message.audio:
         file_id = message.audio.file_id
     elif message.voice:
         file_id = message.voice.file_id
@@ -476,16 +478,22 @@ async def handle_music(message: types.Message):
         result = await identify_music(file_path)
         
         if result['success']:
+            query = f"{result['artist']} {result['title']}"
             caption = f"🎵 **Topilgan musiqa:**\n\n" \
                       f"📝 **Nomi:** {result['title']}\n" \
                       f"👤 **Ijrochi:** {result['artist']}\n\n" \
                       f"🔗 [Shazam-da ko'rish]({result['url']})"
             
+            # Button for full version
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📥 To'liq versiyani yuklash", callback_data=f"search_text:{query[:30]}")]
+            ])
+
             if result['cover']:
-                await message.answer_photo(result['cover'], caption=caption, parse_mode="Markdown")
+                await message.answer_photo(result['cover'], caption=caption, reply_markup=kb, parse_mode="Markdown")
                 await status_message.delete()
             else:
-                await status_message.edit_text(caption, parse_mode="Markdown")
+                await status_message.edit_text(caption, reply_markup=kb, parse_mode="Markdown")
         else:
             await status_message.edit_text(result['message'])
             
