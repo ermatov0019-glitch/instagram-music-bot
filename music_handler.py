@@ -1,38 +1,44 @@
 import asyncio
+import os
 try:
-    from shazamio import Shazam
+    from ShazamAPI import Shazam
     SHAZAM_AVAILABLE = True
 except ImportError:
     SHAZAM_AVAILABLE = False
-    print("Warning: shazamio library not found. Shazam features will be disabled.")
-import os
 
 async def identify_music(file_path: str):
     """
-    Identifies music using Shazam API with multiple attempts at different offsets.
+    Identifies music using ShazamAPI (Pure Python version).
     """
     if not SHAZAM_AVAILABLE:
-        return {'success': False, 'message': "Kechirasiz, ushbu serverda Shazam funksiyasi vaqtincha o'chirilgan. Qo'shiq nomini yozib qidirishingiz mumkin. 🔍"}
+        return {'success': False, 'message': "Kechirasiz, ushbu serverda Shazam funksiyasi vaqtincha o'chirilgan. 🔍"}
     
-    shazam = Shazam()
-    
-    # We will try recognizing the song as is first.
-    # If it fails, we don't have a built-in offset in shazamio's recognize_song,
-    # but the library is usually good at finding it within the file.
-    # However, for very long files, we can try to pass segments if needed.
-    
+    if not os.path.exists(file_path):
+        return {'success': False, 'message': "Fayl topilmadi. ❌"}
+
     try:
-        out = await shazam.recognize_song(file_path)
-        if out and 'track' in out:
-            return parse_track_data(out['track'])
+        # ShazamAPI synchronous bo'lgani uchun uni thread-da ishlatamiz
+        with open(file_path, 'rb') as f:
+            content = f.read()
         
-        # If first attempt fails, it might be due to a long intro.
-        # But shazamio usually handles the whole file. 
-        # Let's add more detailed data parsing.
+        shazam = Shazam(content)
+        recognize_generator = shazam.recognizeSong()
         
-        return {'success': False, 'message': "Musiqa topilmadi. 😔"}
+        # Birinchi natijani olamiz
+        try:
+            res = next(recognize_generator)
+            # res -> (offset, data)
+            data = res[1]
+            
+            if data and 'track' in data:
+                return parse_track_data(data['track'])
+            
+            return {'success': False, 'message': "Musiqa topilmadi. 😔"}
+        except StopIteration:
+            return {'success': False, 'message': "Musiqa topilmadi. 😔"}
+            
     except Exception as e:
-        print(f"Shazam error: {e}")
+        print(f"ShazamAPI Error: {e}")
         return {'success': False, 'message': "Xatolik yuz berdi. ❌"}
 
 def parse_track_data(track):
@@ -48,7 +54,6 @@ def parse_track_data(track):
                 metadata[meta.get('title')] = meta.get('text')
     
     album = metadata.get('Album', 'Noma\'lum')
-    label = metadata.get('Label', 'Noma\'lum')
     released = metadata.get('Released', 'Noma\'lum')
     genres = track.get('genres', {}).get('primary', 'Noma\'lum')
     
@@ -63,8 +68,7 @@ def parse_track_data(track):
             lyrics = "\n".join(section.get('text', []))
             break
 
-    # Songlink (Barcha platformalar uchun link)
-    # Shazam URL dan foydalanib song.link yaratish mumkin
+    # Songlink
     songlink = f"https://song.link/s/{track.get('key')}" if track.get('key') else url
 
     return {
@@ -79,12 +83,3 @@ def parse_track_data(track):
         'cover': cover,
         'lyrics': lyrics
     }
-
-if __name__ == "__main__":
-    # Test
-    async def test():
-        # You need an actual audio file to test
-        # res = await identify_music("test.mp3")
-        # print(res)
-        pass
-    asyncio.run(test())
