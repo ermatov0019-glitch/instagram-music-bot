@@ -516,12 +516,16 @@ async def main():
     port = int(os.environ.get("PORT", 10000))
     site = web.TCPSite(runner, "0.0.0.0", port)
     
-    # Start bot and server concurrently
+    # Web serverni birinchi bo'lib va tezroq ishga tushiramiz
     print(f"Starting web server on port {port}...")
     await site.start()
     
+    # Render portni topishi uchun biroz kutamiz
+    await asyncio.sleep(2) 
+    
     print("Starting bot polling...")
-    await dp.start_polling(bot)
+    # Pollingni barcha eski xabarlarni o'chirib yuboradigan qilib yoqamiz (skip_updates=True)
+    await dp.start_polling(bot, skip_updates=True)
 
 if __name__ == "__main__":
     try:
