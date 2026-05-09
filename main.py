@@ -429,25 +429,14 @@ async def process_music_search(message: types.Message, query: str):
 async def handle_general_message(message: types.Message):
     text = message.text.strip()
     
-    # 1. Check if it's a link
+    # 1. Havolalarni tekshirish
     link_patterns = ["http", "https", "www.", "instagram.com", "tiktok.com", "youtube.com", "youtu.be"]
     if any(pattern in text.lower() for pattern in link_patterns):
-        return # handle_link will take care of it
+        return # handle_link funksiyasi buni hal qiladi
 
-    # 2. Offer to search if it looks like a song (not too long)
-    if 3 < len(text) < 100:
-        search_kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f"🔍 '{text}' ni qidirish", callback_data=f"search_text:{text[:30]}")]
-        ])
-        await message.answer(f"Bu musiqa nomi bo'lishi mumkinmi? 🤔", reply_markup=search_kb)
-    
-    # 3. Handle with AI
-    await message.bot.send_chat_action(chat_id=message.chat.id, action="typing")
-    response = await get_ai_response(text)
-    try:
-        await message.answer(response, parse_mode="Markdown")
-    except Exception:
-        await message.answer(response)
+    # 2. Agar havola bo'lmasa, yo'riqnoma beramiz
+    if not text.startswith('/'):
+        await message.answer("Iltimos, Instagram, TikTok yoki YouTube havolasini yuboring. 📥")
 
 @dp.callback_query(F.data.startswith("search_text:"))
 async def cb_search_text(callback: types.CallbackQuery):
