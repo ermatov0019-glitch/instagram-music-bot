@@ -1,10 +1,12 @@
-FROM python:3.10-slim
+FROM python:3.10
 
-# Tizim paketlarini o'rnatish (FFmpeg va Rust compiler Shazam uchun)
+# Tizim paketlarini o'rnatish (Full image ishlatamiz, ko'proq build tool-lar bor)
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     curl \
     build-essential \
+    pkg-config \
+    libssl-dev \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
