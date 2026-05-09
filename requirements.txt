@@ -4,6 +4,6 @@ python-dotenv
 aiohttp
 google-generativeai
 groq
-shazamio
+ShazamAPI
 imageio-ffmpeg
 psycopg2-binary
