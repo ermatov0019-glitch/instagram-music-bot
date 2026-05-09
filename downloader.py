@@ -36,7 +36,7 @@ def download_media(url: str, audio_only: bool = False):
         },
         'extractor_args': {
             'youtube': {
-                'player_client': ['android', 'ios', 'web'],
+                'player_client': ['android', 'ios'],
                 'skip': ['hls', 'dash'],
             }
         }
