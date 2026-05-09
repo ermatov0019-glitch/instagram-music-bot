@@ -121,7 +121,25 @@ def search_and_download_music(query: str):
     downloaded_files = []
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([f"ytsearch1:{query}"])
+            # First attempt: SoundCloud
+            print(f"Searching on SoundCloud: {query}")
+            ydl.params['default_search'] = 'scsearch1'
+            try:
+                ydl.download([f"scsearch1:{query}"])
+            except Exception as e:
+                print(f"SoundCloud search error: {e}")
+            
+            # Check if downloaded
+            downloaded = [f for f in os.listdir(DOWNLOADS_DIR) if f.startswith(f"full_audio_{unique_id}")]
+            
+            # Second attempt: YouTube (fallback)
+            if not downloaded:
+                print(f"Not found on SoundCloud, searching on YouTube: {query}")
+                ydl.params['default_search'] = 'ytsearch1'
+                try:
+                    ydl.download([f"ytsearch1:{query}"])
+                except Exception as e:
+                    print(f"YouTube search error: {e}")
             
             for f in os.listdir(DOWNLOADS_DIR):
                 if f.startswith(f"full_audio_{unique_id}"):
@@ -129,7 +147,7 @@ def search_and_download_music(query: str):
             
             return list(set(downloaded_files))
     except Exception as e:
-        print(f"Search error: {e}")
+        print(f"Search total error: {e}")
         return []
 
 def cleanup_files(filepaths: list):
