@@ -6,3 +6,4 @@ google-generativeai
 groq
 shazamio
 imageio-ffmpeg
+psycopg2-binary
