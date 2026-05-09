@@ -88,7 +88,8 @@ def download_media(url: str, audio_only: bool = False):
 
 def search_and_download_music(query: str):
     """
-    Searches for a song on YouTube and downloads the best audio.
+    Searches for a song on SoundCloud and downloads the best audio.
+    SoundCloud is generally more bot-friendly than YouTube.
     """
     unique_id = str(uuid.uuid4())[:8]
     output_template = os.path.join(DOWNLOADS_DIR, f"full_audio_{unique_id}.%(ext)s")
@@ -101,13 +102,21 @@ def search_and_download_music(query: str):
         'outtmpl': output_template,
         'quiet': True,
         'no_warnings': True,
-        'default_search': 'ytsearch1',
+        'default_search': 'scsearch1', # SoundCloud search
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
-            'preferredquality': '320', # Sifatni 320kbps ga ko'tardik
+            'preferredquality': '320',
         }],
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+        }
     }
+
+    # Cookies strategy
+    cookies_path = "cookies.txt"
+    if os.path.exists(cookies_path):
+        ydl_opts['cookiefile'] = cookies_path
 
     downloaded_files = []
     try:
