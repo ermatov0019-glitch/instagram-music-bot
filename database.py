@@ -51,20 +51,34 @@ def add_user(user_id, username, full_name):
         conn.close()
 
 def get_all_users():
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT user_id FROM users')
-    users = cursor.fetchall()
-    conn.close()
-    return [u[0] for u in users]
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT user_id FROM users')
+        users = cursor.fetchall()
+        return [u[0] for u in users]
+    except Exception as e:
+        print(f"Error getting all users: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
 
 def get_user_count():
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT COUNT(*) FROM users')
-    count = cursor.fetchone()[0]
-    conn.close()
-    return count
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM users')
+        count = cursor.fetchone()[0]
+        return count
+    except Exception as e:
+        print(f"Error getting user count: {e}")
+        return 0
+    finally:
+        if conn:
+            conn.close()
 
 # Initialize database
 init_db()
