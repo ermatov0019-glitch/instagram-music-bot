@@ -36,9 +36,10 @@ def download_media(url: str, audio_only: bool = False):
             '-c:v', 'libx264',
             '-c:a', 'aac',
             '-pix_fmt', 'yuv420p',
-            '-profile:v', 'baseline',  # Eng yuqori moslik
+            '-preset', 'veryfast',    # Xotira va vaqtni tejash uchun eng tezkor rejim
+            '-profile:v', 'baseline',
             '-level', '3.0',
-            '-movflags', '+faststart'   # iPhone uchun streaming
+            '-movflags', '+faststart'
         ],
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
@@ -63,7 +64,8 @@ def download_media(url: str, audio_only: bool = False):
         })
     else:
         ydl_opts.update({
-            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', # MP4-ni birinchi navbatda qidiradi
+            # Sifatni 1080p gacha cheklaymiz, bu RAM to'lib qolishini oldini oladi
+            'format': 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]/best',
             'outtmpl': output_template,
         })
 
