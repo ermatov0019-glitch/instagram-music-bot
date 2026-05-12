@@ -145,6 +145,7 @@ async def admin_command(message: types.Message):
     await message.answer(text, reply_markup=reply_markup, parse_mode="Markdown")
 
 @dp.callback_query(F.data == "admin_stats")
+async def cb_admin_stats(callback: types.CallbackQuery):
     count = db.get_user_count()
     await callback.message.edit_text(
         "🛠 **Boshqaruv Paneli**\n\n"
