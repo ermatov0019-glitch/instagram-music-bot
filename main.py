@@ -258,6 +258,9 @@ async def handle_webapp_data(message: types.Message):
 @dp.message(F.text.regexp(r"(https?://(?:www\.)?(?:instagram\.com|tiktok\.com|youtube\.com|youtu\.be)/\S+)"))
 async def handle_link(message: types.Message):
     import re
+    url_match = re.search(r"(https?://\S+)", message.text)
+    if not url_match:
+        return
     url = url_match.group(1)
     
     # Register user if not already in DB
