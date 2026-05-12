@@ -33,11 +33,12 @@ def download_media(url: str, audio_only: bool = False):
         'merge_output_format': 'mp4',
         'ffmpeg_location': ffmpeg_path,
         'postprocessor_args': [
-            '-c:v', 'libx264',        # iPhone compatible video codec
-            '-c:a', 'aac',            # iPhone compatible audio codec
-            '-pix_fmt', 'yuv420p',    # Critical for iOS compatibility
-            '-profile:v', 'main',     # Standard profile for compatibility
-            '-level', '4.0'
+            '-c:v', 'libx264',
+            '-c:a', 'aac',
+            '-pix_fmt', 'yuv420p',
+            '-profile:v', 'baseline',  # Eng yuqori moslik
+            '-level', '3.0',
+            '-movflags', '+faststart'   # iPhone uchun streaming
         ],
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
@@ -62,7 +63,7 @@ def download_media(url: str, audio_only: bool = False):
         })
     else:
         ydl_opts.update({
-            'format': 'bestvideo+bestaudio/best',
+            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', # MP4-ni birinchi navbatda qidiradi
             'outtmpl': output_template,
         })
 
