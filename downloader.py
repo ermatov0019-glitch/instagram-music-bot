@@ -28,10 +28,17 @@ def download_media(url: str, audio_only: bool = False):
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
-        'writethumbnail': True, # Download thumbnail for better quality preview
+        'writethumbnail': True,
         'noplaylist': True,
-        'merge_output_format': 'mp4', # Ensure output is mp4
+        'merge_output_format': 'mp4',
         'ffmpeg_location': ffmpeg_path,
+        'postprocessor_args': [
+            '-c:v', 'libx264',        # iPhone compatible video codec
+            '-c:a', 'aac',            # iPhone compatible audio codec
+            '-pix_fmt', 'yuv420p',    # Critical for iOS compatibility
+            '-profile:v', 'main',     # Standard profile for compatibility
+            '-level', '4.0'
+        ],
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
         },
@@ -55,7 +62,7 @@ def download_media(url: str, audio_only: bool = False):
         })
     else:
         ydl_opts.update({
-            'format': 'bestvideo+bestaudio/best', # Fetch best streams
+            'format': 'bestvideo+bestaudio/best',
             'outtmpl': output_template,
         })
 
