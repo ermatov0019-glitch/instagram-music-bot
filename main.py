@@ -131,17 +131,30 @@ async def admin_command(message: types.Message):
 
     count = db.get_user_count()
     kb = [
-        [InlineKeyboardButton(text="📊 Statistika", callback_data="admin_stats")],
+        [InlineKeyboardButton(text="📊 Yangilash", callback_data="admin_stats")],
         [InlineKeyboardButton(text="📢 Xabar yuborish", callback_data="admin_broadcast")]
     ]
     reply_markup = InlineKeyboardMarkup(inline_keyboard=kb)
     
-    await message.answer(f"🔧 **Boshqaruv Paneli**\n\n📊 Foydalanuvchilar: `{count}` ta\n📅 Status: `Faol`", reply_markup=reply_markup, parse_mode="Markdown")
+    text = (
+        "🛠 **Boshqaruv Paneli**\n\n"
+        f"👥 Foydalanuvchilar: `{count}` ta\n"
+        "📡 Server: `Render.com`\n"
+        "⚙️ Status: `Onlayn ✅`"
+    )
+    await message.answer(text, reply_markup=reply_markup, parse_mode="Markdown")
 
 @dp.callback_query(F.data == "admin_stats")
-async def cb_admin_stats(callback: types.CallbackQuery):
     count = db.get_user_count()
-    await callback.answer(f"Botdan {count} ta foydalanuvchi ro'yxatdan o'tgan.", show_alert=True)
+    await callback.message.edit_text(
+        "🛠 **Boshqaruv Paneli**\n\n"
+        f"👥 Foydalanuvchilar: `{count}` ta (yangilandi 🔄)\n"
+        "📡 Server: `Render.com`\n"
+        "⚙️ Status: `Onlayn ✅`",
+        reply_markup=callback.message.reply_markup,
+        parse_mode="Markdown"
+    )
+    await callback.answer("Statistika yangilandi!")
 
 @dp.callback_query(F.data == "admin_broadcast")
 async def cb_admin_broadcast(callback: types.CallbackQuery):
@@ -244,10 +257,10 @@ async def handle_webapp_data(message: types.Message):
 @dp.message(F.text.regexp(r"(https?://(?:www\.)?(?:instagram\.com|tiktok\.com|youtube\.com|youtu\.be)/\S+)"))
 async def handle_link(message: types.Message):
     import re
-    url_match = re.search(r"(https?://\S+)", message.text)
-    if not url_match:
-        return
     url = url_match.group(1)
+    
+    # Register user if not already in DB
+    db.add_user(message.from_user.id, message.from_user.username, message.from_user.full_name)
     
     # Store URL for callbacks
     unique_id = str(uuid.uuid4())[:8]
