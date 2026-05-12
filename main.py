@@ -215,7 +215,20 @@ async def handle_webapp_data(message: types.Message):
                 else:
                     item = media_group[0]
                     if isinstance(item, InputMediaVideo):
-                        await message.answer_video(item.media, caption="Tayyor! ✅")
+                        # Try to find thumbnail
+                        thumb = None
+                        video_path = None
+                        for p in file_paths:
+                            if p.lower().split('.')[-1] in ['jpg', 'jpeg', 'webp']:
+                                thumb = FSInputFile(p)
+                            elif p.lower().split('.')[-1] in ['mp4', 'mov', 'mkv', 'webm']:
+                                video_path = p
+                        
+                        if video_path and os.path.getsize(video_path) > 50 * 1024 * 1024:
+                            # Send as document if > 50MB to preserve quality
+                            await message.answer_document(FSInputFile(video_path), caption="Video hajmi katta bo'lgani uchun hujjat sifatida yuborildi (sifatni saqlash uchun). ✅")
+                        else:
+                            await message.answer_video(item.media, thumbnail=thumb, supports_streaming=True, caption="Tayyor! ✅")
                     else:
                         await message.answer_photo(item.media, caption="Tayyor! ✅")
                 await status_message.delete()
@@ -273,8 +286,34 @@ async def cb_download_video(callback: types.CallbackQuery):
         return
     
     if video_files and isinstance(video_files, list):
+        # Separate video and thumbnail
+        video_path = None
+        thumb_path = None
         for path in video_files:
-            await callback.message.answer_video(FSInputFile(path), caption="✅ **Video tayyor!**")
+            ext = path.lower().split('.')[-1]
+            if ext in ['mp4', 'mov', 'mkv', 'webm']:
+                video_path = path
+            elif ext in ['jpg', 'jpeg', 'webp']:
+                thumb_path = path
+        
+        if video_path:
+            thumb = FSInputFile(thumb_path) if thumb_path else None
+            file_size = os.path.getsize(video_path)
+            
+            if file_size > 50 * 1024 * 1024:
+                # Send as document if > 50MB
+                await callback.message.answer_document(
+                    FSInputFile(video_path),
+                    caption="✅ **Video tayyor!**\n\n*(Hajmi 50MB dan katta bo'lgani uchun hujjat sifatida yuborildi)*"
+                )
+            else:
+                await callback.message.answer_video(
+                    FSInputFile(video_path), 
+                    thumbnail=thumb,
+                    supports_streaming=True,
+                    caption="✅ **Video tayyor!**"
+                )
+        
         cleanup_files(video_files)
         await status.delete()
     else:
