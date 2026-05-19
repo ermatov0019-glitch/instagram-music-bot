@@ -32,15 +32,6 @@ def download_media(url: str, audio_only: bool = False):
         'noplaylist': True,
         'merge_output_format': 'mp4',
         'ffmpeg_location': ffmpeg_path,
-        'postprocessor_args': [
-            '-c:v', 'libx264',
-            '-c:a', 'aac',
-            '-pix_fmt', 'yuv420p',
-            '-preset', 'veryfast',    # Xotira va vaqtni tejash uchun eng tezkor rejim
-            '-profile:v', 'baseline',
-            '-level', '3.0',
-            '-movflags', '+faststart'
-        ],
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
         },
